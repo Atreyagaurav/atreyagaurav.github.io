@@ -1,0 +1,268 @@
+# -*- org-export-use-babel: nil -*-
+#+latex_class:mynotes
+#+title: Exercise: Flow Duration Curves
+#+author: Gaurav Atreya
+
+* Introduction
+Flow Duration Curve is the curve that can be defined as (1-cdf), where cdf is the cumulative probability function of the streamflows.
+
+* Provided Data
+Data are provided in ~data~ directory. Streamflow data file ~streamflow-timeseries.csv~ is basically the only one you'd actually need. 
+
+The other files are ~streamflow-timeseries_na-values.csv~ with a list of dates with missing data. And the ~annual~ directory has the annual flow duration curve details I used to make the plots in the slides. We'll learn to make those files ourselves.
+
+#+begin_src bash :exports result :results type verbatim :wrap src text
+tree . --charsets ascii
+#+end_src
+
+#+RESULTS[0c54028ddc5224e38bbce390972c5553e51e349c]:
+#+begin_src text
+.
+|-- data
+|   |-- annual
+|   |   |-- 1980-obs.txt
+|   |   |-- 1981-obs.txt
+|   |   |-- ...
+|   |   |-- 1998-obs.txt
+|   |   `-- 1999-obs.txt
+|   |-- streamflow-timeseries.csv
+|   `-- streamflow-timeseries_na-values.csv
+|-- fdc-notes.org
+|-- fdc-notes.pdf
+|-- fdc-notes.tex
+|-- fdc.gp
+`-- timeseries-nat+obs.gp
+#+end_src
+
+* Exercise
+
+** Loading Libraries
+#+begin_src R :tangle yes :exports code :result output type verbatim :wrap src text
+library(MASS)
+#+end_src
+
+#+RESULTS[5ca9a295e5cd7f93220dd02c5db3ab95d90e519e]:
+#+begin_src text
+| MASS      |
+| stats     |
+| graphics  |
+| grDevices |
+| utils     |
+| datasets  |
+| methods   |
+| base      |
+#+end_src
+
+** Loading the Streamflow Data
+
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+streamflow <- read.csv("data/streamflow-timeseries.csv")
+names(streamflow) <- c("date", "flow")
+streamflow$date <- as.Date(streamflow$date, "%d%b%Y")
+head(streamflow)
+#+end_src
+
+#+RESULTS[88d01dc145a15925b3bd8cf6709a42df77667a8f]:
+#+begin_src text
+| 1978-01-02 | 10900 |
+| 1978-01-03 |  9900 |
+| 1978-01-04 |  9500 |
+| 1978-01-05 |  9800 |
+| 1978-01-06 |  8900 |
+| 1978-01-07 |  8700 |
+#+end_src
+
+** Filtering
+
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+select_start <- as.Date("1980-01-01")
+select_end <- as.Date("2001-01-01")
+select_index <- (streamflow$date >= select_start) & (streamflow$date < select_end)
+streamflow_select <- streamflow[select_index,]
+head(streamflow_select)
+#+end_src
+
+#+RESULTS[3f7fcd4902a76439c6e3338569d1cf4528172b53]:
+#+begin_src text
+| 1980-01-01 | 18600 |
+| 1980-01-02 | 17000 |
+| 1980-01-03 | 16900 |
+| 1980-01-04 | 14600 |
+| 1980-01-05 | 13200 |
+| 1980-01-06 | 12500 |
+#+end_src
+
+** Period of Record FDC
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+flows_sorted <- sort(streamflow_select$flow, decreasing=TRUE)
+fdc_pof <- data.frame(flow=flows_sorted)
+total_count <- length(flows_sorted)
+fdc_pof$probability <- ((1:total_count)-0.5)/total_count
+head(fdc_pof)
+#+end_src
+
+#+RESULTS[0e7b8f393bfbc892f30fee6190812f31c5d92f2c]:
+#+begin_src text
+| 143984 |  6.5180550123843e-05 |
+| 127043 | 0.000195541650371529 |
+| 124400 | 0.000325902750619215 |
+| 124100 | 0.000456263850866901 |
+| 122490 | 0.000586624951114587 |
+| 117300 | 0.000716986051362273 |
+#+end_src
+
+Plotting it.
+
+You can plot them using the code below, uncomment them and try. Note that the plots in the slides are using different program so you won't get same graphics, but the values are the same.
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+## plot(fdc_pof$probability, fdc_pof$flow)
+## plot(fdc_pof$probability, log(fdc_pof$flow))
+#+end_src
+
+#+RESULTS[ded61065cf2b48e76aa7e437d34e9622ea179147]:
+#+begin_src text
+#+end_src
+
+Looks good saving it.
+
+#+begin_src R :tangle yes :exports code :result output type verbatim :wrap src text
+write.table(fdc_pof ,"data/fdc_pof.csv",
+            sep=" ", col.names=FALSE, row.names=FALSE)
+#+end_src
+
+#+RESULTS[3a3b6be021c8941f94d041b13646f34b1578556d]:
+#+begin_src text
+#+end_src
+
+
+** Annual FDC
+It can be made in the similar way, but this time you have to get one year's worth of data at one time.
+
+** getting 40% exceedance
+*** From a single curve
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+approx(fdc_pof$probability, fdc_pof$flow, 0.4)$y
+#+end_src
+
+#+RESULTS[64b46705c40b7581ccc1a95c594117f260973137]:
+#+begin_src text
+12700
+#+end_src
+
+*** From multiple curves
+
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+years <- 1980:1999
+flows_40p <- mapply(function(year) {
+  fdc <- read.csv(sprintf("data/annual/%4d-obs.txt", year), sep=" ")
+  return (approx(fdc$prob, fdc$value, 0.4)$y)
+}, years)
+range(flows_40p)
+#+end_src
+
+#+RESULTS[efb9961a8c60f54c813fe3754cdc9b7088c21e73]:
+#+begin_src text
+|    8400 |
+| 21281.5 |
+#+end_src
+
+Summary:
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+summary(flows_40p)
+#+end_src
+
+#+RESULTS[ad54e1940391e8ae174a6af330c775df95c539fa]:
+#+begin_src text
+ Min. 1st Qu. Median    Mean  3rd Qu.    Max. 
+8400   10705   12652   13201   14928   21282 
+#+end_src
+
+Median seems close to PoR 40% exceedance.
+
+** 40% Exceedance with Confidence Interval
+
+Let's see if the distribution is normal:
+
+#+begin_src R :tangle yes :exports both :results output graphics :exports results :file plots/qqplot.pdf  
+qqnorm(flows_40p)
+#+end_src
+
+[[./plots/qqplot.pdf]]
+
+Looks like the distribution is normal looking.
+
+Now we can calculate the confidence interval by calculating the range.
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+fit_40p <- MASS::fitdistr(flows_40p, 'normal')
+mean_40p <- fit_40p$estimate[1]
+sd_40p <- fit_40p$estimate[2]
+## 90% confidence interval
+z = qnorm(0.95)
+c(mean_40p - z * sd_40p, mean_40p + z * sd_40p)
+#+end_src
+
+#+RESULTS[04b492e47164d1fcfae3d125e52373eab804c9e3]:
+#+begin_src text
+| 8079.06075910273 |
+| 18323.5392408973 |
+#+end_src
+
+Similary if you only care about the lower limit
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+## 90% confidence lower limit
+z = qnorm(0.10)
+mean_40p + z * sd_40p
+#+end_src
+
+#+RESULTS[cc90db41ce25d140042e05507742d049c50657e8]:
+#+begin_src text
+9210.41983248491
+#+end_src
+
+Means you're 90% sure the hydropower plant will operate in full capacity for 40% of the time, for any given year (if you design for this capacity).
+
+
+
+** Making FDC with CI
+You can do previous step for multiple exceedance probabilities to make a whole new FDC.
+
+#+begin_src R :tangle yes :exports both :result none
+years <- 1980:1999
+percs <- (1:365 -.5)/365
+flows_p <- mapply(function(year) {
+  fdc <- read.csv(sprintf("data/annual/%4d-obs.txt", year), sep=" ")
+  return (approx(fdc$prob, fdc$value, percs)$y)
+}, years)
+#+end_src
+
+
+#+begin_src R :tangle yes :exports both :result output type verbatim :wrap src text
+fdc_ci <- data.frame(perc=double(), mean=double(),sd=double())
+
+for (i in 1:365){
+  fit_i <- MASS::fitdistr(flows_p[i,], 'normal')
+  mean_i <- fit_i$estimate[1]
+  sd_i <- fit_i$estimate[2]
+  fdc_ci[nrow(fdc_ci) + 1,] <- c(percs[i],
+                                 mean_i,
+                                 sd_i)
+}
+head(fdc_ci)
+#+end_src
+
+#+RESULTS[d1621e331e806eba14ced57edd7f80e2007dddf5]:
+#+begin_src text
+| 0.00136986301369863 | 99797.3410273973 | 21785.2092915706 |
+| 0.00410958904109589 | 88101.1340410959 | 17669.4847387325 |
+| 0.00684931506849315 | 82205.6732876712 |  18302.886637135 |
+| 0.00958904109589041 | 77540.0740410959 | 17149.4762334991 |
+|  0.0123287671232877 | 74327.5813013699 | 17733.9976247567 |
+|  0.0150684931506849 | 70542.6760273973 | 17231.7961480589 |
+#+end_src
+
+
+#+begin_src R :tangle yes :exports both :output none
+write.csv(fdc_ci, "data/fdc_fit.csv")
+#+end_src
+
+#+RESULTS[8050981bcf573d663ae3fa45d82dfedc5cf152c2]:
