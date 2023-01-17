@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2023-01-16 Mon 21:26 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Exercise: Flow Duration Curves</title>
+<meta name="author" content="Gaurav Atreya" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">Exercise: Flow Duration Curves</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org80f9d58">1. Introduction</a></li>
+<li><a href="#org869ba2f">2. Provided Data</a></li>
+<li><a href="#orgad9e5c1">3. Exercise</a>
+<ul>
+<li><a href="#org8d72d0a">3.1. Loading Libraries</a></li>
+<li><a href="#org68a2889">3.2. Loading the Streamflow Data</a></li>
+<li><a href="#orgaaea0f2">3.3. Filtering</a></li>
+<li><a href="#org11565d8">3.4. Period of Record FDC</a></li>
+<li><a href="#org915d55f">3.5. Annual FDC</a></li>
+<li><a href="#org586f4bf">3.6. getting 40% exceedance</a>
+<ul>
+<li><a href="#orgc25a068">3.6.1. From a single curve</a></li>
+<li><a href="#orgfa747d2">3.6.2. From multiple curves</a></li>
+</ul>
+</li>
+<li><a href="#orgddb1fa1">3.7. 40% Exceedance with Confidence Interval</a></li>
+<li><a href="#org529d9c6">3.8. Making FDC with CI</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org80f9d58" class="outline-2">
+<h2 id="org80f9d58"><span class="section-number-2">1.</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Flow Duration Curve is the curve that can be defined as (1-cdf), where cdf is the cumulative probability function of the streamflows.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org869ba2f" class="outline-2">
+<h2 id="org869ba2f"><span class="section-number-2">2.</span> Provided Data</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Data are provided in <code>data</code> directory. Streamflow data file <code>streamflow-timeseries.csv</code> is basically the only one you'd actually need. 
+</p>
+
+<p>
+The other files are <code>streamflow-timeseries_na-values.csv</code> with a list of dates with missing data. And the <code>annual</code> directory has the annual flow duration curve details I used to make the plots in the slides. We'll learn to make those files ourselves.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">tree . --charsets ascii
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">.
+|-- data
+|   |-- annual
+|   |   |-- 1980-obs.txt
+|   |   |-- 1981-obs.txt
+|   |   |-- ...
+|   |   |-- 1998-obs.txt
+|   |   `-- 1999-obs.txt
+|   |-- streamflow-timeseries.csv
+|   `-- streamflow-timeseries_na-values.csv
+|-- fdc-notes.org
+|-- fdc-notes.pdf
+|-- fdc-notes.tex
+|-- fdc.gp
+`-- timeseries-nat+obs.gp
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgad9e5c1" class="outline-2">
+<h2 id="orgad9e5c1"><span class="section-number-2">3.</span> Exercise</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org8d72d0a" class="outline-3">
+<h3 id="org8d72d0a"><span class="section-number-3">3.1.</span> Loading Libraries</h3>
+<div class="outline-text-3" id="text-3-1">
+<div class="org-src-container">
+<pre class="src src-R"><span style="color: #e5786d;">library</span>(MASS)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">| MASS      |
+| stats     |
+| graphics  |
+| grDevices |
+| utils     |
+| datasets  |
+| methods   |
+| base      |
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org68a2889" class="outline-3">
+<h3 id="org68a2889"><span class="section-number-3">3.2.</span> Loading the Streamflow Data</h3>
+<div class="outline-text-3" id="text-3-2">
+<div class="org-src-container">
+<pre class="src src-R">streamflow <span style="color: #e5786d;">&lt;-</span> read.csv(<span style="color: #95e454;">"data/streamflow-timeseries.csv"</span>)
+names(streamflow) <span style="color: #e5786d;">&lt;-</span> c(<span style="color: #95e454;">"date"</span>, <span style="color: #95e454;">"flow"</span>)
+streamflow$date <span style="color: #e5786d;">&lt;-</span> as.Date(streamflow$date, <span style="color: #95e454;">"%d%b%Y"</span>)
+head(streamflow)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">| 1978-01-02 | 10900 |
+| 1978-01-03 |  9900 |
+| 1978-01-04 |  9500 |
+| 1978-01-05 |  9800 |
+| 1978-01-06 |  8900 |
+| 1978-01-07 |  8700 |
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgaaea0f2" class="outline-3">
+<h3 id="orgaaea0f2"><span class="section-number-3">3.3.</span> Filtering</h3>
+<div class="outline-text-3" id="text-3-3">
+<div class="org-src-container">
+<pre class="src src-R">select_start <span style="color: #e5786d;">&lt;-</span> as.Date(<span style="color: #95e454;">"1980-01-01"</span>)
+select_end <span style="color: #e5786d;">&lt;-</span> as.Date(<span style="color: #95e454;">"2001-01-01"</span>)
+select_index <span style="color: #e5786d;">&lt;-</span> (streamflow$date &gt;= select_start) &amp; (streamflow$date &lt; select_end)
+streamflow_select <span style="color: #e5786d;">&lt;-</span> streamflow[select_index,]
+head(streamflow_select)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">| 1980-01-01 | 18600 |
+| 1980-01-02 | 17000 |
+| 1980-01-03 | 16900 |
+| 1980-01-04 | 14600 |
+| 1980-01-05 | 13200 |
+| 1980-01-06 | 12500 |
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org11565d8" class="outline-3">
+<h3 id="org11565d8"><span class="section-number-3">3.4.</span> Period of Record FDC</h3>
+<div class="outline-text-3" id="text-3-4">
+<div class="org-src-container">
+<pre class="src src-R">flows_sorted <span style="color: #e5786d;">&lt;-</span> sort(streamflow_select$flow, decreasing=<span style="color: #92a65e; font-weight: bold;">TRUE</span>)
+fdc_pof <span style="color: #e5786d;">&lt;-</span> data.frame(flow=flows_sorted)
+total_count <span style="color: #e5786d;">&lt;-</span> length(flows_sorted)
+fdc_pof$probability <span style="color: #e5786d;">&lt;-</span> ((1:total_count)-0.5)/total_count
+head(fdc_pof)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">| 143984 |  6.5180550123843e-05 |
+| 127043 | 0.000195541650371529 |
+| 124400 | 0.000325902750619215 |
+| 124100 | 0.000456263850866901 |
+| 122490 | 0.000586624951114587 |
+| 117300 | 0.000716986051362273 |
+</pre>
+</div>
+
+<p>
+Plotting it.
+</p>
+
+<p>
+You can plot them using the code below, uncomment them and try. Note that the plots in the slides are using different program so you won't get same graphics, but the values are the same.
+</p>
+<div class="org-src-container">
+<pre class="src src-R"><span style="color: #99968b;">## </span><span style="color: #99968b;">plot(fdc_pof$probability, fdc_pof$flow)</span>
+<span style="color: #99968b;">## </span><span style="color: #99968b;">plot(fdc_pof$probability, log(fdc_pof$flow))</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">
+</pre>
+</div>
+
+<p>
+Looks good saving it.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-R">write.table(fdc_pof ,<span style="color: #95e454;">"data/fdc_pof.csv"</span>,
+            sep=<span style="color: #95e454;">" "</span>, col.names=<span style="color: #92a65e; font-weight: bold;">FALSE</span>, row.names=<span style="color: #92a65e; font-weight: bold;">FALSE</span>)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org915d55f" class="outline-3">
+<h3 id="org915d55f"><span class="section-number-3">3.5.</span> Annual FDC</h3>
+<div class="outline-text-3" id="text-3-5">
+<p>
+It can be made in the similar way, but this time you have to get one year's worth of data at one time.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org586f4bf" class="outline-3">
+<h3 id="org586f4bf"><span class="section-number-3">3.6.</span> getting 40% exceedance</h3>
+<div class="outline-text-3" id="text-3-6">
+</div>
+<div id="outline-container-orgc25a068" class="outline-4">
+<h4 id="orgc25a068"><span class="section-number-4">3.6.1.</span> From a single curve</h4>
+<div class="outline-text-4" id="text-3-6-1">
+<div class="org-src-container">
+<pre class="src src-R">approx(fdc_pof$probability, fdc_pof$flow, 0.4)$y
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">12700
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgfa747d2" class="outline-4">
+<h4 id="orgfa747d2"><span class="section-number-4">3.6.2.</span> From multiple curves</h4>
+<div class="outline-text-4" id="text-3-6-2">
+<div class="org-src-container">
+<pre class="src src-R">years <span style="color: #e5786d;">&lt;-</span> 1980:1999
+flows_40p <span style="color: #e5786d;">&lt;-</span> mapply(<span style="color: #8ac6f2; font-weight: bold;">function</span>(year) {
+  fdc <span style="color: #e5786d;">&lt;-</span> read.csv(sprintf(<span style="color: #95e454;">"data/annual/%4d-obs.txt"</span>, year), sep=<span style="color: #95e454;">" "</span>)
+  <span style="color: #8ac6f2; font-weight: bold;">return</span> (approx(fdc$prob, fdc$value, 0.4)$y)
+}, years)
+range(flows_40p)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">|    8400 |
+| 21281.5 |
+</pre>
+</div>
+
+<p>
+Summary:
+</p>
+<div class="org-src-container">
+<pre class="src src-R">summary(flows_40p)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text"> Min. 1st Qu. Median    Mean  3rd Qu.    Max. 
+8400   10705   12652   13201   14928   21282 
+</pre>
+</div>
+
+<p>
+Median seems close to PoR 40% exceedance.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgddb1fa1" class="outline-3">
+<h3 id="orgddb1fa1"><span class="section-number-3">3.7.</span> 40% Exceedance with Confidence Interval</h3>
+<div class="outline-text-3" id="text-3-7">
+<p>
+Let's see if the distribution is normal:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-R">qqnorm(flows_40p)
+</pre>
+</div>
+
+<p>
+<a href="./plots/qqplot.pdf">./plots/qqplot.pdf</a>
+</p>
+
+<p>
+Looks like the distribution is normal looking.
+</p>
+
+<p>
+Now we can calculate the confidence interval by calculating the range.
+</p>
+<div class="org-src-container">
+<pre class="src src-R">fit_40p <span style="color: #e5786d;">&lt;-</span> MASS::fitdistr(flows_40p, <span style="color: #95e454;">'normal'</span>)
+mean_40p <span style="color: #e5786d;">&lt;-</span> fit_40p$estimate[1]
+sd_40p <span style="color: #e5786d;">&lt;-</span> fit_40p$estimate[2]
+<span style="color: #99968b;">## </span><span style="color: #99968b;">90% confidence interval</span>
+z = qnorm(0.95)
+c(mean_40p - z * sd_40p, mean_40p + z * sd_40p)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">| 8079.06075910273 |
+| 18323.5392408973 |
+</pre>
+</div>
+
+<p>
+Similary if you only care about the lower limit
+</p>
+<div class="org-src-container">
+<pre class="src src-R"><span style="color: #99968b;">## </span><span style="color: #99968b;">90% confidence lower limit</span>
+z = qnorm(0.10)
+mean_40p + z * sd_40p
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">9210.41983248491
+</pre>
+</div>
+
+<p>
+Means you're 90% sure the hydropower plant will operate in full capacity for 40% of the time, for any given year (if you design for this capacity).
+</p>
+</div>
+</div>
+
+
+
+<div id="outline-container-org529d9c6" class="outline-3">
+<h3 id="org529d9c6"><span class="section-number-3">3.8.</span> Making FDC with CI</h3>
+<div class="outline-text-3" id="text-3-8">
+<p>
+You can do previous step for multiple exceedance probabilities to make a whole new FDC.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-R">years <span style="color: #e5786d;">&lt;-</span> 1980:1999
+percs <span style="color: #e5786d;">&lt;-</span> (1:365 -.5)/365
+flows_p <span style="color: #e5786d;">&lt;-</span> mapply(<span style="color: #8ac6f2; font-weight: bold;">function</span>(year) {
+  fdc <span style="color: #e5786d;">&lt;-</span> read.csv(sprintf(<span style="color: #95e454;">"data/annual/%4d-obs.txt"</span>, year), sep=<span style="color: #95e454;">" "</span>)
+  <span style="color: #8ac6f2; font-weight: bold;">return</span> (approx(fdc$prob, fdc$value, percs)$y)
+}, years)
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-R">fdc_ci <span style="color: #e5786d;">&lt;-</span> data.frame(perc=double(), mean=double(),sd=double())
+
+<span style="color: #8ac6f2; font-weight: bold;">for</span> (i <span style="color: #8ac6f2; font-weight: bold;">in</span> 1:365){
+  fit_i <span style="color: #e5786d;">&lt;-</span> MASS::fitdistr(flows_p[i,], <span style="color: #95e454;">'normal'</span>)
+  mean_i <span style="color: #e5786d;">&lt;-</span> fit_i$estimate[1]
+  sd_i <span style="color: #e5786d;">&lt;-</span> fit_i$estimate[2]
+  fdc_ci[nrow(fdc_ci) + 1,] <span style="color: #e5786d;">&lt;-</span> c(percs[i],
+                                 mean_i,
+                                 sd_i)
+}
+head(fdc_ci)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-text">| 0.00136986301369863 | 99797.3410273973 | 21785.2092915706 |
+| 0.00410958904109589 | 88101.1340410959 | 17669.4847387325 |
+| 0.00684931506849315 | 82205.6732876712 |  18302.886637135 |
+| 0.00958904109589041 | 77540.0740410959 | 17149.4762334991 |
+|  0.0123287671232877 | 74327.5813013699 | 17733.9976247567 |
+|  0.0150684931506849 | 70542.6760273973 | 17231.7961480589 |
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-R">write.csv(fdc_ci, <span style="color: #95e454;">"data/fdc_fit.csv"</span>)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Gaurav Atreya</p>
+<p class="date">Created: 2023-01-16 Mon 21:26</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

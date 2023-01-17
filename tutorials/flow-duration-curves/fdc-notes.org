@@ -2,6 +2,8 @@
 #+latex_class:mynotes
 #+title: Exercise: Flow Duration Curves
 #+author: Gaurav Atreya
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+#+EXPORT_FILE_NAME: index.html
 
 * Introduction
 Flow Duration Curve is the curve that can be defined as (1-cdf), where cdf is the cumulative probability function of the streamflows.
