@@ -1,0 +1,27 @@
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+#+TITLE: Locus Project
+#+OPTIONS: num:nil
+#+OPTIONS: toc:nil
+#+EXPORT_FILE_NAME: ../locus/index.html
+
+* Introduction
+
+The Locus project is for analysis of extreme precipitation patterns in the United States. We're developing the Algorithms to extract, analyse and visualize the precipitation patterns for basins based on their Hydrologic Unit Code (HUC), so that it can be applied to any watershed.
+
+Git repo: https://github.com/Atreyagaurav/locus-code-usace
+
+Data used:
+- Livneh Dataset for Precipitation
+- USGS dataset for Water boundary
+
+* Example Results
+Here are example visualization of the different patterns in some basins
+
+| Basin                |      HUC | Extreme Precipitation Type | Length of Event | Link                   |
+|----------------------+----------+----------------------------+-----------------+------------------------|
+| Ohio                 |       05 | AMS                        | 1 day           | [[https://atreyagaurav.github.io/locus/05-ohio/map-ams-1day.html][05-ams-1day.html]]       |
+| Ohio                 |       05 | PDS                        | 1 day           | [[https://atreyagaurav.github.io/locus/05-ohio/map-pds-1day.html][05-pds-1day.html]]       |
+| Trinity              |     1203 | AMS                        | 1 day           | [[https://atreyagaurav.github.io/locus/1203-trinity/map-ams-1day.html][1203-ams-1day.html]]     |
+| Trinity              |     1203 | PDS                        | 1 day           | [[https://atreyagaurav.github.io/locus/1203-trinity/map-pds-1day.html][1203-pds-1day.html]]     |
+| North Branch Potomac | 02070002 | AMS                        | 1 day           | [[https://atreyagaurav.github.io/locus/02070002-north-branch-potomac/map-ams-1day.html][02070002-ams-1day.html]] |
+| North Branch Potomac | 02070002 | PDS                        | 1 day           | [[https://atreyagaurav.github.io/locus/02070002-north-branch-potomac/map-pds-1day.html][02070002-pds-1day.html]] |
