@@ -15,7 +15,11 @@ Data used:
 - USGS dataset for Water boundary
 
 * Example Results
+
 Here are example visualization of the different patterns in some basins
+
+- [[https://atreyagaurav.github.io/locus/interactive.html][Interactive Page]]
+- Individual maps can be accessed here:
 
 | Basin                |      HUC | Extreme Precipitation Type | Length of Event | Link                   |
 |----------------------+----------+----------------------------+-----------------+------------------------|

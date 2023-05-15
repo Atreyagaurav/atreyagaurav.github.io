@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+    <head>
+	<title>Locus</title>
+	<meta charset="utf-8" />
+	<style>
+	 html,body {
+	     margin: 0;
+	     height: 100%;
+	    }
+
+	 .sidecontrol {
+	     height: 100%;
+	     width: 20%;
+	     position: absolute;
+	     left: 0;
+	     top: 0;
+	     padding-top: 40px;
+	     padding-left: 1%;
+	     background-color: lightblue;
+	 }
+
+	 .sidecontrol div {
+	     padding: 8px;
+	     font-size: 24px;
+	     display: block;
+	 }
+
+	 body {
+	     margin-left: 20%;
+	     font-size: 18px;
+	 }
+	</style>
+    </head>
+    <body>
+	<div class="sidecontrol">
+	    Choose Basin:
+	<select id="location" name="Location" onchange="UpdateMap()">
+	    <option value="05-ohio-region">Ohio Region</option>
+	    <option value="1203-trinity">Trinity</option>
+	    <option value="02070002-north-branch-potomac">North Branch Potomac</option>
+	</select>
+
+	<p>Choose Series:
+	<input type="radio" id="radio-ams" value="AMS" name="series" onclick="UpdateMap()">AMS
+	<input type="radio" id="radio-pds" value="PDS" name="series" onclick="UpdateMap()">PDS
+	</p>
+	</div>
+	
+	
+	<iframe id="main-map" style="height:100%;width:100%;" src="/locus/05-ohio-region/map-ams-1day.html"></iframe>
+
+	<script>
+	 function UpdateMap() {
+	     var basin = document.getElementById("location").value;
+	     var series;
+	     if (document.getElementById("radio-ams").checked){
+		 series = "ams";
+	     } else {
+		 series = "pds";
+	     }document.getElementById("main-map").src = "/locus/"+ basin +"/map-"+ series +"-1day.html";
+	 }
+	 
+	</script>
+    </body>
+</html>
