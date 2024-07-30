@@ -33,7 +33,9 @@
 	</style>
     </head>
     <body>
-	<div class="sidecontrol">
+	<div class="sidecontrol">\
+	    <p> Interactive control for Browsing through the results from <a href="https://github.com/Atreyagaurav/locus-code-usace">Locus project</a>.</p>
+		
 	    Choose Basin:
 	<select id="location" name="Location" onchange="UpdateMap()">
 	    <option value="05-ohio-region">Ohio Region</option>
@@ -42,9 +44,11 @@
 	</select>
 
 	<p>Choose Series:
-	<input type="radio" id="radio-ams" value="AMS" name="series" onclick="UpdateMap()">AMS
+	<input type="radio" id="radio-ams" value="AMS" name="series" checked onclick="UpdateMap()">AMS
 	<input type="radio" id="radio-pds" value="PDS" name="series" onclick="UpdateMap()">PDS
 	</p>
+
+	<p>NOTE: Grid values have a lot of points for large watersheds, be careful on turning it on and off.</p>
 	</div>
 	
 	
