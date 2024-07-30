@@ -48,14 +48,28 @@ You can reach me in discord, my username is: thevoidzero#４６８６ (type it o
   - [[#spring-2022][Spring 2022]]
 
 * Websites
-I don't have many websites at this moment, I don't like web dev that much because I find it harder than making software tools. But since web apps are lot easier to use and easier to update after distribution I do make some. But unfortunately I haven't made anything that has lots of users/visitors.
+I don't like web dev that much because I find it harder than making software tools. But since web apps are lot easier to use and easier to update after distribution I do make some. But unfortunately I haven't made anything that has lots of users/visitors.
 
-** Kabita Check
+** Interactive Map and data download for Locus Project
+Link: https://ronin-river.github.io/
+
+[[./images/locus.png]]
+
+This is a project I did as a ORISE Fellow. Here the extreme precipitation analysis was done for the whole continental United States based on HUC regions, and the spatial patterns were clustered. The netCDF files can be downloaded through the interactive index, while the results can be explored from the interactive map as shown in the screenshot above.
+
+** Interactive Map showing the streamflow data available for the Ohio River Basin
+Link: https://atreyagaurav.github.io/ohio-river/index.html
+
+[[./images/ohio.png]]
+
+This is a simple interactive map I created to show the data density for the Ohio River, as well as to show the gaps in the streamflow data from USGS and USACE in concerns to the main stem.
+
+** Kabita Check -- Currently Unavailable
 Link: https://kabita-check.herokuapp.com
 
 It is a website to check the chanda kabita (Poem) in Nepali Language. I made this for my father to check for any typographical mistakes he may have in his poems. It also has a Nepali Dictionary though with additional features of being able to search through the rhymes and tones.
 
-** Onegai Translations
+** Onegai Translations -- Currently Unavailable
 Link: http://onegai-translations.tech/home
 
 It is currently under developement, the plan is to make a platform where translations can be done by the translators while the users can also read the content in both languages line by line. The website is intended to be used by language learners who are interested in literatures.
@@ -64,10 +78,52 @@ Due to my lack of skill in web dev, the website is just a skeleton for now. I do
 
 And because of lack of skill I've made a [[https://github.com/Atreyagaurav/onegai][commandline tool]] in Rust for some translation works. 
 
+* Programs for Work
+
+** HEC-DSS file utility
+Link: [[https://github.com/Atreyagaurav/dss2csv]]
+
+This programs can convert the DSS v7 files into CSV files or vice versa. As well as DSS v7 grid files into ASCII grids or vice versa. This is useful when you want to batch convert files.
+
+Note: This is currently only tested in Linux, for windows version heclib might have to be manually compiled.
+
+** Anek utility
+Link: [[https://github.com/Atreyagaurav/anek]]
+
+This program can help managing a large project that needs to run same pipelines of tasks in different locations, or with different models.
+
+I have used it extensively since I made it to make easily replicable studies, where I write the scripts to download data, analyse them, visualize them etc for one location, and use anek utility to apply that for different locations.
+
+** NADI (Network Analysis and Data Integration)
+Link: [[https://github.com/Nadi-System/nadi]]
+
+This program is under-development, and looking for funding source to support it. The program is an extensible framework that can use river connection information to assist in data analysis and management. It has a plugin architecture that can extend the functions as per the user demand.
+
+Extra utilities in nadi toolset can also download the basin/tributaries GIS files for USGS stations. As well as find the river connections based on streams network and points of interest.
+
+** Beamer Quickie
+Link: [[https://github.com/Atreyagaurav/beamer-quickie]]
+
+[[https://github.com/Atreyagaurav/beamer-quickie/raw/main/screenshot.png]]
+
+This program lets you open LaTeX files with beamer presentation and shows you the frames with curresponding PDF pages so that you can visually copy the slides you want while making a new one. It can also give you the list of image files you might need to copy for those slides.
+
 * General Programs
 Here are some of the programs I am proud of. 
 
 All of these programs are on my [[https://github.com/Atreyagaurav][github]] account, so you can fork and modify to your heart's contents. And other details on how to use are also there.
+
+** Local MPV
+Link: [[https://github.com/Atreyagaurav/local-mpv]]
+
+[[https://github.com/Atreyagaurav/local-mpv/raw/main/screenshot.png]]
+
+This programs runs a simple webserver with a music player (mpv) on the computer. You can control the music player from other computers or phones in the same wifi network. This is useful for letting your family share the control of playlist for music, or for home parties so people can add songs to the playlist.
+
+** URL Memories
+Link: [[https://github.com/Atreyagaurav/url-memories]]
+
+This simple GUI program can save any links you want to remember, with a support for episodes/chapters that might change the link. Useful to save the links to your favorite shows and books, so that you don't have to remember where you are.
 
 ** Onegai Translation Tools
 Link: [[https://github.com/Atreyagaurav/onegai]]
